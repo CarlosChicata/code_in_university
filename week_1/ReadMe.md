@@ -1,15 +1,15 @@
-## Chat Server-Client
-# Purpose:
-Create a Server-Client type Chat to communicate.
+# Chat Server-Client
+## Purpose:
+Create a Server-Client type Chat to communicate using c++ 11 programming language.
 
-# File List
+## File List
 * **Server.cpp**: Contain all code implements a Server.
 * **Client.cpp**: Contain all code implements a Client.
 
-# Diagram of communication
+## Diagram of communication
 
 
-# How to run?
+## How to run?
 * In terminal to access Server.cpp; run `g++ -std=c++11 -pthread Server.cpp -o Server.o`. Now Server is running.
 * In other terminal to access Client.cpp; run `g++ -std=c++11 -pthread Client.cpp -o Client.o`. Now client is running.
 * Write a message in Client, this message send so Server will print this message.
