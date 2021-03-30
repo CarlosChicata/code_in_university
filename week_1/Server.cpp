@@ -38,6 +38,7 @@ char buffer[MAX_SIZE_BUFFER];
 void printMsgByClient(int ip_conn){
     int n;
     bool flag = true;
+    string msg;
 
     while(flag){
         bzero(buffer, MAX_SIZE_BUFFER);
@@ -46,6 +47,8 @@ void printMsgByClient(int ip_conn){
         if (n < 0) perror("ERROR reading from socket");
         cout << "from thread" << endl;
         printf("Here is the message: [%s]\n", buffer);
+        cout << ">>";
+        getline(cin, msg);
         n = write(ip_conn, "hola desde el server!", MAX_SIZE_BUFFER);
         if (n < 0) perror("ERROR writing to socket");
         flag = true;
@@ -67,7 +70,7 @@ void typingFromServer(){
 
     while(true){
         cout << ">>";
-                getline(cin, msg);
+		getline(cin, msg);
         cout << msg;
         ///for(int index = 0; index < conn_list.size(); index++){
         ///    n = write(conn_list[index], msg.c_str(), MAX_SIZE_BUFFER);
@@ -135,12 +138,12 @@ int main(void)
         thread clientListener(printMsgByClient, ConnectFD);
         clientListener.join();
         string msg;
-        for(;;){
+        /*for(;;){
             cout << ">>";
             getline(cin, msg);
             n = write(ConnectFD, msg.c_str(), MAX_SIZE_BUFFER);
             if (n < 0) perror("ERROR writing to socket");
-        }
+        }*/
         ///bzero(buffer,MAX_SIZE_BUFFER);
         ///n = read(ConnectFD,buffer,MAX_SIZE_BUFFER);
         ///if (n < 0) perror("ERROR reading from socket");
