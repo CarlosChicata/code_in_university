@@ -49,7 +49,7 @@ void processThread(int ip_conn){
         /// write process
         cout << ">>";
         getline(cin, msg);
-        n = write(ip_conn, "hola desde el server!", MAX_SIZE_BUFFER);
+        n = write(ip_conn, msg.c_str(), MAX_SIZE_BUFFER);
         if (n < 0) perror("ERROR writing to socket");
         flag = true;
     }
@@ -112,10 +112,11 @@ int main(void)
         conn_list.push_back(ConnectFD);
 
         /// create a listener to message from client
-        thread clientListener(procesThread, ConnectFD);
+        thread clientListener(processThread, ConnectFD);
         clientListener.join();
     }
  
     close(SocketFD);
     return 0;
   }
+
