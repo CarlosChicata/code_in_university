@@ -65,6 +65,11 @@ void typingIntoServer(int ip_conn){
         n = write(ip_conn, msg.c_str(), MAX_SIZE_BUFFER);
         if (n < 0) perror("ERROR writing to socket");
         msg = "";
+        bzero(buffer, MAX_SIZE_BUFFER);
+        n = read(ip_conn, buffer,MAX_SIZE_BUFFER);
+        cout << "read client" << endl;
+        if (n < 0) perror("ERROR reading from socket");
+        printf("the message is: [%s]\n", buffer);
     }
 }
 
@@ -117,11 +122,11 @@ int main(){
     ClientSender.join();
 
     for(;;){
-        bzero(buffer, MAX_SIZE_BUFFER);
-        n = read(SocketFD, buffer, MAX_SIZE_BUFFER);
-        cout << "read client" << endl;
-        if (n < 0) perror("ERROR reading from socket");
-        printf("Here is the message: [%s]\n", buffer);
+        ///bzero(buffer, MAX_SIZE_BUFFER);
+        ///n = read(SocketFD, buffer, MAX_SIZE_BUFFER);
+        ///cout << "read client" << endl;
+        ///if (n < 0) perror("ERROR reading from socket");
+        ///printf("Here is the message: [%s]\n", buffer);
         ///cout << ">>";
         ///getline(cin, msg);
         ///n = write(SocketFD, msg.c_str(), MAX_SIZE_BUFFER);
