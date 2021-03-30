@@ -30,23 +30,23 @@ char buffer[MAX_SIZE_BUFFER];
 
 /**
  * Purpose:
- *  print message from client.
+ *  process write-read server from client.
  * 
  * Params:
  *  - ip_con (int): ip of connection.
  */
-void printMsgByClient(int ip_conn){
+void processThread(int ip_conn){
     int n;
     bool flag = true;
     string msg;
 
     while(flag){
+        /// read process
         bzero(buffer, MAX_SIZE_BUFFER);
         n = read(ip_conn, buffer,MAX_SIZE_BUFFER);
-        cout << "read" << endl;
         if (n < 0) perror("ERROR reading from socket");
-        cout << "from thread" << endl;
         printf("Here is the message: [%s]\n", buffer);
+        /// write process
         cout << ">>";
         getline(cin, msg);
         n = write(ip_conn, "hola desde el server!", MAX_SIZE_BUFFER);
@@ -57,27 +57,6 @@ void printMsgByClient(int ip_conn){
     shutdown(ip_conn, SHUT_RDWR);
     
     close(ip_conn);
-    return ;
-}
-
-/**
- * Purpose:
- *  send message all client connect.
- */
-void typingFromServer(){
-    string msg;
-    int n;
-
-    while(true){
-        cout << ">>";
-		getline(cin, msg);
-        cout << msg;
-        ///for(int index = 0; index < conn_list.size(); index++){
-        ///    n = write(conn_list[index], msg.c_str(), MAX_SIZE_BUFFER);
-        ///    if (n < 0) perror("ERROR writing to socket");
-        ///}
-    }
-
     return ;
 }
 
@@ -116,10 +95,8 @@ int main(void)
       close(SocketFD);
       exit(EXIT_FAILURE);
     }
-
-    ///thread serverTrigger(typingFromServer);
-    //serverTrigger.join();
  
+    /// manage connection into server
     for(;;)
     {
         int ConnectFD = accept(SocketFD, NULL, NULL);
@@ -135,23 +112,8 @@ int main(void)
         conn_list.push_back(ConnectFD);
 
         /// create a listener to message from client
-        thread clientListener(printMsgByClient, ConnectFD);
+        thread clientListener(procesThread, ConnectFD);
         clientListener.join();
-        string msg;
-        /*for(;;){
-            cout << ">>";
-            getline(cin, msg);
-            n = write(ConnectFD, msg.c_str(), MAX_SIZE_BUFFER);
-            if (n < 0) perror("ERROR writing to socket");
-        }*/
-        ///bzero(buffer,MAX_SIZE_BUFFER);
-        ///n = read(ConnectFD,buffer,MAX_SIZE_BUFFER);
-        ///if (n < 0) perror("ERROR reading from socket");
-        ///printf("Here is the message: [%s]\n",buffer);
-        ///n = write(ConnectFD,"I got your message",18);
-        ///if (n < 0) perror("ERROR writing to socket");
-    
-        /* perform read write operations ... */
     }
  
     close(SocketFD);
