@@ -24,7 +24,7 @@ How to run:
 #include "utils_socket.h"
 
 #define MAX_SIZE_BUFFER 256
-#define PORT 45002
+#define PORT 45003
 
 using namespace std;
 
@@ -90,10 +90,8 @@ class Client{
         //// msg to client
         processedCommand = segmentationString( processedCommand.second, " ");
         for(Client* c: connections){;
-          if(((c->name) == processedCommand.first) == 0){
+          if(comparingString(c->name, processedCommand.first)){
             writeSocket(c->idConnection, processedCommand.second.c_str(), MAX_SIZE_BUFFER);
-          }else{
-            writeSocket(c->idConnection, "ups!", MAX_SIZE_BUFFER);
           }
         }
       }else if(token == "exit"){
