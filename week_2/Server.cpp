@@ -24,7 +24,7 @@ How to run:
 #include "utils_socket.h"
 
 #define MAX_SIZE_BUFFER 256
-#define PORT 45003
+#define PORT 45000
 
 using namespace std;
 
@@ -79,9 +79,10 @@ class Client{
      * Return depending of command.
      */
     void manageCommand(string command){
+      cout << command << endl;
       pair<string, string> processedCommand =  segmentationString(command, " ");
       string token = processedCommand.first;
-      
+
       /// control of options
       if(token == "name"){
         this->name = processedCommand.second;
@@ -94,12 +95,19 @@ class Client{
             writeSocket(c->idConnection, processedCommand.second.c_str(), MAX_SIZE_BUFFER);
           }
         }
-      }else if(token == "exit"){
+      }else if(comparingString(processedCommand.second, "exit")){
+        cout << "entramos a la salida" << endl;
         //// close connection
-        writeSocket(this->idConnection, "exit", MAX_SIZE_BUFFER);
+        writeSocket(this->idConnection, "exitcon", MAX_SIZE_BUFFER);
+        for(vector<Client* >::iterator it = connections.begin(); it != connections.end(); it++){
+          if((*it)->idConnection == this->idConnection){
+            connections.erase(it);
+            break;
+          }
+        }
         this->isActive = false;
       }else{
-        //// wrong command
+
       }
     }
 
