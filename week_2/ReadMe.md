@@ -43,4 +43,4 @@ Use to close participation in chat.
 Every mark in list if solved limitation.
 - [ ] The IP and Port area hard coding in files or server and client. I need to passing those params by terminal.
 - [ ] Hard change structure of manage command by protocols structure. I need to separate manage from implementation of protocols by add middleware layers.
-- [ ] Not have validation of duplicate of nickname.  Solved [ ]
+- [ ] Not have validation of duplicate of nickname.
