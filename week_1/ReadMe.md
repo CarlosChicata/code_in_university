@@ -19,6 +19,5 @@ This a diagram of process to explain communication between all process.
 
 ## Limitation list
 Every mark in list is solved item.
-- [ ] This is a online Server-Client communication and don't support communication of several client in server.
 - [ ] The port and IP of network is hardcoding in files.
 - [ ] Add mechanism to close the chat.
