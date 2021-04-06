@@ -49,36 +49,27 @@ pair<string, string> segmentationString(string msg, string delimiter){
 }
 
 /**
- * Purpose:
- *  analyze the command and get data to process.
- * Params:
- *  - command (string) : message in txt.
- *  - connect (int) : ID of connection client.
- * Return a pair with message to send and ID connection will receive
- * Message.
- 
-pair<int, string>  manageCommands(string command, int connect){
-  pair<int, string> rpta = make_pair(connect, "WRONG!");
-  pair<string, string> processComm = segmentationString(command, " ");
-  
-  /// command options
-  if(processComm.first == "name" ){
-    //// store name in server
-    conn_list[connect] = processComm.second;
-    reverse_conn_list[processComm.second] = connect;
-    rpta.second = "Save name!";
-  }else if(processComm.first == "msg"){
-    //// send msg to other client
-    processComm = segmentationString(processComm.second, " ");
-    rpta.first = reverse_conn_list[processComm.first];
-    rpta.second = processComm.second;
-  }else{
-    /// wrong command
-    rpta.second = "Invalid Commad!";
+ * Purpose: 
+ *  comparing 2 string are same.
+ * Params
+ *  - a (string) : message first.
+ *  - b (string) : message second.
+ * return boolean is same or not.
+ */
+bool comparingString(string a, string b){
+  int minSize = min(a.length(), b.length());
+  bool rpta = true;
+
+  for( int idx = 0; idx < minSize; idx++){
+    if(a[idx] != b[idx]){
+      rpta = false;
+      break;
+    }
   }
+
   return rpta;
 }
-*/
+
 
 ////  METHODS OF SOCKET
 
