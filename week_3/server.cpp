@@ -26,7 +26,7 @@
 using namespace std;
 
 //////////////////////////////AUX/////////////////////////////
-///// define a methods that next implementations will use
+///// define a head methods that next implementations will use
 
 int ___socket(int domain, int type, int protocol);
 int ___inet_pton(int af, const char* src, void* dst);
@@ -55,33 +55,26 @@ private:
     bool isActive = true; /// manage status of connection inside server
 
 public:
-    Client(int connectFD): connectFD(connectFD)
-    {
+    Client(int connectFD): connectFD(connectFD){
         clients.push_back(this);
     }
 
-    // printf("debug: recibi [%s] de \"%s\"\n", pack.c_str(), this->nickname.c_str());
-    // printf("debug: envio [%s] a \"%s\"\n", pack.c_str(), this->nickname.c_str());
     /**
      * Purpose:
-     *  manage msg of client
+     *  manage msg inside connection of client
      */
-    void receivePackages()
-    {
-        do
-        {
-            string pack(1000, '\0');
-            ___read(connectFD, (char*)pack.c_str(), 1000);
+    void receivePackages(){
+        do{
+            string pack(1000, '\0'); /// clean buffer
+            ___read(connectFD, (char*)pack.c_str(), 1000); /// read message of client
 
-	    if(isRequest(pack))
-	    {
-                pack = request2response(pack);
-                ___write(connectFD, pack.c_str(), pack.size());
-	    }
-	    else
-	    {
-                lastResponse = response2string(pack);
-	    }
+            if(isRequest(pack)){ /// check if msg is command
+                pack = request2response(pack); /// process message of client
+                ___write(connectFD, pack.c_str(), pack.size()); /// alway responde of command
+            }
+            else{
+                lastResponse = response2string(pack); /// generate response of string (this is useless part of server)
+            }
         }while(this->isActive);
 
         // Cerrar conexion
@@ -89,20 +82,28 @@ public:
         close(connectFD);
     }
 
+    /**
+     * Purpose:
+     *  process msg and generate a responde of msg to client.
+     * Params:
+     *  - pack: msg of client to process and responde it.
+     * Return a response will send to client.
+     * NOTE: 
+     *  - This is a receive manager. This part interprete msg of client.
+     */
     string request2response(string pack)
     {
-        string response;
+        string response; /// temp buffer
         int idx = 2;
-        switch(pack[0])
-        {
-        case '1': // nick
+        switch(pack[0]){
+        case '1': // nick command
         {
             string nick = parserGetField(pack, idx, 2);
             this->nickname = nick;
             response = join({"5"}); // OK
             break;
         }
-        case '2': // list
+        case '2': // list command
         {
             vector<string> list;
             for(Client* c: clients) if(!c->nickname.empty())
@@ -111,15 +112,15 @@ public:
             response = join({"6", len(listmsg, 3), listmsg});
             break;
         }
-        case '3': // msg
+        case '3': // msg command
         {
             string tocli, msg;
-            tocli = parserGetField(pack, idx, 2);
-            msg = parserGetField(pack, idx, 3);
+            tocli = parserGetField(pack, idx, 2); /// get field from msg
+            msg = parserGetField(pack, idx, 3); /// get field from msg
             for(Client* c: clients) if(c->nickname == tocli)
             {
-		sendMsgToDestinataryClient(c, msg);
-		if(destinatarySendedOk(c))
+                sendMsgToDestinataryClient(c, msg); //// send msg to client
+                if(destinatarySendedOk(c)) /// check if destiny client receive correct the msg sent
                     response = join({"5"});
                 else
                     response = errorMsg("Error en cliente receptor");
@@ -129,59 +130,83 @@ public:
             break;
         }
         
-        case '8': // exit
+        case '8': // exit command
             for(int i=0; i<clients.size(); ++i) if(clients[i] == this)
                 clients.erase(clients.begin() + i);
             this->isActive = false;
             response = join({"5"}); // ok
             break;
-        default:
+        default: /// send wrong command to client
             response = errorMsg("Comando no identificado");
         }
-        if(this->nickname.empty() && pack[0] != '8')
+
+        if(this->nickname.empty() && pack[0] != '8') /// check if connection has a nickname
             response = errorMsg("Necesitas un nickname!!"); 
         return response;
     }
 
-    string response2string(string pack)
-    {
-	string str;
+    /**
+     * Purpose:
+     *  get status of command from client.
+     * Params:
+     *  - pack: msg to process.
+     * return a status of msg.
+     */
+    string response2string(string pack){
+        string str;
         switch(pack[0])
-	{
-        case '4': // error
-            str = errorMsg("Error en cliente receptor");
-	    break;
-        case '5': // OK
-            str = join({"5"});
+        {
+            case '4': // error
+                str = errorMsg("Error en cliente receptor");
             break;
-	}
-	return str;
+            case '5': // OK
+                str = join({"5"});
+            break;
+        }
+        return str;
     }
 
-    void sendMsgToDestinataryClient(Client* c, string msg)
-    {
+    /**
+     * Purpose:
+     *  send msg to client
+     * Params:
+     *  - c : client to receive msg.
+     *  - msg: msg to send.
+     * Return None.
+     */
+    void sendMsgToDestinataryClient(Client* c, string msg){
         string pack;
         pack = join({"7", len(this->nickname, 2), this->nickname, len(msg, 3), msg});
         // printf("Enviando a destinatario [%s]\n", pack.c_str());
         ___write(c->connectFD, pack.c_str(), pack.size()); 
     }
 
-    bool destinatarySendedOk(Client* c)
-    {
+    /**
+     * Purpose:
+     *  check if last response is ok or not.
+     * Params:
+     *  - c : client to update field.
+     * return boolean.
+     */
+    bool destinatarySendedOk(Client* c){
         sleep(1); // Lo esperamos solo 1 segundo
         return c->lastResponse == join({"5"}); //OK
     }
-
-    bool isRequest(string pack)
-    {
+    
+    /**
+     * Purpose:
+     *  check if this msg to responde a command.
+     * Params:
+     *  pack: msg from client.
+     */ 
+    bool isRequest(string pack){
         return pack[0] == '1' || pack[0] == '2' || pack[0] == '3' || pack[0] == '8';
     }
 };
 
-int server_Thread(int serverPort)
-{
-    try
-    {
+//// contain a main code to run server
+int server_Thread(int serverPort){
+    try{
         // Crear socket
         int sockFD;
         struct sockaddr_in stSockAddr;  
@@ -199,35 +224,32 @@ int server_Thread(int serverPort)
         printf("Servidor abierto\n");
 
         // Aceptar conexiones entrantes
-        while(true)
-        {
+        while(true){
             int connectFD;
             connectFD = ___accept(sockFD, NULL, NULL);
             printf("cliente conexion recibida\n");
-            Client* c = new Client(connectFD);
-            thread th(&Client::receivePackages, c);
-            th.detach();
+            Client* c = new Client(connectFD); /// create a client conection manager object
+            thread th(&Client::receivePackages, c); /// link this manager with thread
+            th.detach(); /// separate thread of main thread of executor
         }
         // Cierro el servidor
         close(sockFD);
     }
-    catch(string msg_error)
-    {
+    catch(string msg_error){
         perror(msg_error.c_str()); // perror da mas detalle que printf 
         exit(EXIT_FAILURE);
     }
 }
 //////////////////////////////SIGNAL//////////////////////////////
 
-void sighandler(int signum)
-{
+//// exit executor if something go wrong
+void sighandler(int signum){
     exit(0); // Mas seguro segun vi
 }
 
 //////////////////////////////MAIN////////////////////////////////
 // >>hostname -I: saca mi IP, en consola
-int main(int argc, const char** argv)
-{
+int main(int argc, const char** argv){
     signal(SIGKILL, sighandler);
     if(argc != 2)
     {
@@ -235,8 +257,8 @@ int main(int argc, const char** argv)
         printf("Ejemplo: ./server.exe 1480\n");
         exit(EXIT_FAILURE);
     }
-    int serverPort = atoi(argv[1]);
-    server_Thread(serverPort);
+    int serverPort = atoi(argv[1]); //// get a Port value
+    server_Thread(serverPort); //// main code to run in server
     return 0;
 }
 
@@ -244,10 +266,10 @@ int main(int argc, const char** argv)
 
 
 //////////////////////////////AUX/////////////////////////////
-// Agrega una capa de seguridad a cada funcion
-// No es necesario leerse todo esto, solo sirve para try-catch
-int ___socket(int domain, int type, int protocol)
-{
+//// implementations of head methods
+
+//// create a socket
+int ___socket(int domain, int type, int protocol){
     int sockFD = socket(domain, type, protocol);
     if (-1 == sockFD)
       throw string("cannot create socket");
@@ -264,44 +286,44 @@ int ___inet_pton(int af, const char* src, void* dst)
     return res;
 }
 
-void ___connect(int sockFD, struct sockaddr* serv_addr, int addrlen)
-{
+//// generate a id of connection
+void ___connect(int sockFD, struct sockaddr* serv_addr, int addrlen){
     int res = connect(sockFD, serv_addr, addrlen);
     if(res == -1)
       throw string("connect failed");
 }
 
-void ___bind(int sockFD, struct sockaddr* my_addr, int addrlen)
-{
+//// link id connection with port & IP
+void ___bind(int sockFD, struct sockaddr* my_addr, int addrlen){
     int res = bind(sockFD, my_addr, addrlen);
     if(res == -1)
       throw string("error bind failed");
 }
 
-void ___listen(int sockFD, int backlog)
-{
+//// enable listen connection
+void ___listen(int sockFD, int backlog){
     int res = listen(sockFD, backlog);
     if(res == -1)
       throw string("error listen failed");
 }
 
-int ___accept(int sockFD, struct sockaddr* addr, socklen_t* addrlen)
-{
+//// accept connection of client inside server
+int ___accept(int sockFD, struct sockaddr* addr, socklen_t* addrlen){
     int connectFD = accept(sockFD, addr, addrlen);
     if(connectFD < 0)
       throw string("error accept failed");
     return connectFD;
 }
 
-void ___read(int fd, char buf[], int len)
-{
+//// read msg of client
+void ___read(int fd, char buf[], int len){
     int n = read(fd, buf, len);
     if(n < 0) 
       throw string("ERROR reading from socket");
 }   
 
-void ___write(int fd, const char* msg, int len)
-{
+//// write msg to client
+void ___write(int fd, const char* msg, int len){
     int n = write(fd, msg, len);
     if(n < 0)
       throw string("ERROR writing to socket");

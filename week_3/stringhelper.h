@@ -4,8 +4,8 @@
 
 using namespace std;
 
-vector<string> tokenizer(string cmd)
-{
+//// split 'cmd'  by ' ' string and store all parts in vector of string.
+vector<string> tokenizer(string cmd){
     vector<string> ans;
     char* tk;
     tk = strtok((char*)cmd.c_str(), " ");
@@ -17,8 +17,8 @@ vector<string> tokenizer(string cmd)
     return ans;
 }
 
-string join(initializer_list<string> vec)
-{
+//// Convert elements inside 'vec' to string
+string join(initializer_list<string> vec){
     string ans;
     for(string s: vec)
       ans = ans + s + " ";
@@ -26,8 +26,8 @@ string join(initializer_list<string> vec)
     return ans;
 }
 
-string split(vector<string> vec, string sep)
-{
+//// join elements in 'vec' using 'sep'
+string split(vector<string> vec, string sep){
     string ans;
     if(!vec.empty())
     {
@@ -44,8 +44,8 @@ string len(string s, int maxlen) // rellena zeros a la izquierda
     return zeros + to_string(s.length());
 }
 
-string parserGetMsg(string cmd)
-{
+
+string parserGetMsg(string cmd){
     string msg;
     int utok = 0;
     for(int i=0; i<cmd.size(); ++i)
@@ -62,19 +62,36 @@ string parserGetMsg(string cmd)
 }
 
 //// toma un campo basado en el el valor que obtiene
-string parserGetField(string pack, int& idx, int bytes)
-{
+/**
+ * Purpose:
+ *  get field from msg using structure.  
+ * Params
+ *  - pack: msg to process.
+ *  - idx: position to get size of field.
+ *  - bytes: number of bytes to contain the field in msg.
+ * Return a field.
+ * NOTE:
+ *  - the structure of pack is: <# bytes of field><field value>
+ *  - this method implement part of protocols.
+ */
+string parserGetField(string pack, int& idx, int bytes){
     string sizestr(pack.begin()+idx, 
                    pack.begin()+idx+bytes);
     int size = stoi(sizestr);
     string field(pack.begin()+idx+bytes+1,
                  pack.begin()+idx+bytes+1+size);
-    idx += bytes+size+2; // para el prox parseo 
+    idx += bytes+size+2; // para el prox parseo, actualiza el indice por eso se para por referencia
     return field;
 }
 
-string errorMsg(string errormsg)
-{
+/**
+ * Purpose:
+ *  generate a error message
+ * Params:
+ *  - errormsg: error message to send
+ * return to message 
+ */
+string errorMsg(string errormsg){
     errormsg = "error: " + errormsg;
     string response = join({"4", len(errormsg, 3), errormsg});
     return response;
