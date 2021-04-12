@@ -44,7 +44,7 @@ string len(string s, int maxlen) // rellena zeros a la izquierda
     return zeros + to_string(s.length());
 }
 
-
+//// get msg from cmd --- be care sure!
 string parserGetMsg(string cmd){
     string msg;
     int utok = 0;
