@@ -31,13 +31,12 @@ void ___write(int fd, const char* msg, int len);
 
 ////////////////////////////VARS/////////////////////////////////////
 
-int isActiveConection;
+int isActiveConection; /// manage the connection of client
 
 ////////////////////////////USER INPUT///////////////////////////////////
 
-//// conectarse al puerto y IP
-void inputServerData(char** hisPeerIP, int* hisPeerPort)
-{
+//// get IP and Port of client to generate connection into server
+void inputServerData(char** hisPeerIP, int* hisPeerPort){
     *hisPeerIP = new char[100];
     printf("A cual server me conecto?\n");
     printf("IP: "); 
@@ -49,38 +48,39 @@ void inputServerData(char** hisPeerIP, int* hisPeerPort)
 
 ///////////////////////////PARSER CMD/////////////////////////////////
 
-string parseCmd(string cmd)
-{
+////// THIS IS A MANAGER TO FORMAT MSG WILL TO SENT INTO SERVER
+//// process msg to format will analyze in server
+string parseCmd(string cmd){
     string pack;
     vector<string> token = tokenizer(cmd);
     if(token.empty())
         pack = "error parsing";
-    else if(token[0] == "nickname")
+    else if(token[0] == "nickname") /// command nickname
         pack = join({"1", len(token[1],2) ,token[1]});
-    else if(token[0] == "list")
+    else if(token[0] == "list") /// command list
         pack = join({"2"});       
-    else if(token[0] == "msg")
+    else if(token[0] == "msg") /// command msg
     {
         string msg = parserGetMsg(cmd);       
         pack = join({"3", len(token[1],2), token[1], len(msg,3), msg});
     }
-    else if(token[0] == "exit")
+    else if(token[0] == "exit") /// command exit
         pack = join({"8"});
     else
-        pack = "error parsing";
+        pack = "error parsing"; /// wrong found command
     return pack;
 }
 
 ////////////////////////////////PACKS & REQUEST/RESPONSE/////////////////////////////////
 
-string request2response(string pack)
-{
+/// generate responde from msg of server
+string request2response(string pack){
     string response;
     switch(pack[0])
     {
         case '7': // msg
         {
-	    response = join({"5"});
+	    response = join({"5"}); /// ok
             break;
         }
         default:
@@ -89,6 +89,8 @@ string request2response(string pack)
     return response;
 }
 
+////// THIS IS A MANAGER TO INTERPRET MSG FROM SERVER
+//// generate response from pack of server
 string response2string(string pack)
 {
     string str;
@@ -97,7 +99,7 @@ string response2string(string pack)
     {
         case '4': // Error
         {
-            string errmsg = parserGetField(pack, idx, 3);
+            string errmsg = parserGetField(pack, idx, 3); /// get msg of error
             str = errmsg; 
             break;
         }
@@ -106,7 +108,7 @@ string response2string(string pack)
             break;
         case '6': // list
         {
-            string listmsg = parserGetField(pack, idx, 3);
+            string listmsg = parserGetField(pack, idx, 3); /// get list of nickname of current connected clients in server
             str = listmsg; 
             break;
         }
@@ -119,76 +121,81 @@ string response2string(string pack)
 
 ///////////////////////////////////SEND/RECEIVE PACKS/////////////////////////////////
 //// SEND
-void sendPackagesToServer(int sockFD)
-{
-    do
-    {
+
+//// send msg to server
+void sendPackagesToServer(int sockFD){
+    do{
         string cmd, pack;
         printf(">>");
         getline(cin, cmd);
-        pack = parseCmd(cmd);
-	if(pack == "8") // quit
-            isActiveConection = false;
-        if(pack == "error parsing")
+        pack = parseCmd(cmd); /// process msg
+	    if(pack == "8") // quit
+            isActiveConection = false; /// close connection of client
+        if(pack == "error parsing") /// if pack is error
             printf("Comando no valido\n");
-	else
-	{	
+	    else{
             // printf("Debug: envio [%s]\n", pack.c_str()); 
-            ___write(sockFD, pack.c_str(), pack.size());
-	}
+            ___write(sockFD, pack.c_str(), pack.size()); /// send message
+	    }
     }while(isActiveConection);
 }
 
 //// RECEIVE
 
-bool isRequest(string pack)
-{
+/// check if pack is a command
+bool isRequest(string pack){
     return pack[0] == '7'; // msg
 }
 
+//// clean terminal to display a correct way the msg
 void printfClean(string reqres) // Evita que la salida consola descuadre con el >> del sendPackages()
 {
      printf("\b\b%s\n>>", reqres.c_str()); // Elimino los '>>', imprimo, agrego otros '>>' 
      fflush(stdout);
 }
 
-void printIsRequestIsMessage(string pack)
-{
+//// print messge from server in client terminal
+void printIsRequestIsMessage(string pack){
     if(pack[0] != '7') return;
-    char buf[280]; 
-    bzero(buf, 280);
+    char buf[280]; //// create a temp buffer
+    bzero(buf, 280); //// clean temp buffer
     int idx = 2;
 
-    string nickFrom = parserGetField(pack, idx, 2);
-    string msg = parserGetField(pack, idx, 3);
-    sprintf(buf, "%s: %s", nickFrom.c_str(), msg.c_str());
-    printfClean(string(buf));
+    string nickFrom = parserGetField(pack, idx, 2); /// get nickname of client sent msg
+    string msg = parserGetField(pack, idx, 3); /// get msg
+    sprintf(buf, "%s: %s", nickFrom.c_str(), msg.c_str()); /// generate msg, store in buffer
+    printfClean(string(buf)); /// clean terminal and display msg
 }
 
-void receivePackagesFromServer(int sockFD)
-{
+/**
+ * Purpose:
+ *  receive msg of responde from server by client.
+ * Params:
+ *  - sockFD: id of connection
+ * Return
+ */ 
+void receivePackagesFromServer(int sockFD){
     do{ 
         string pack(1000, '\0');
         ___read(sockFD, (char*)pack.c_str(), pack.size());
         // printf("Debug: recibo [%s]\n", pack.c_str());
 
         string request, response; // Los packetes del server o son de tipo request, o response
-        if(isRequest(pack))
+        if(isRequest(pack)) /// check is pack is command
         {
-            printIsRequestIsMessage(pack);
-            pack = request2response(pack);
+            printIsRequestIsMessage(pack); /// print msg in terminal
+            pack = request2response(pack); //// generate response of msg
             ___write(sockFD, pack.c_str(), pack.size());  // envio al server su respuesta
         }
-        else
-        {
-            response = response2string(pack);
-	    printfClean(response);
+        else{
+            response = response2string(pack); /// generate message to responde of pack
+	        printfClean(response); /// clean terminal and display msg
         }
     }while(isActiveConection);
 }
 
-void client_Thread()
-{ 
+/// main core of client.
+void client_Thread(){ 
     try
     {
         struct sockaddr_in stSockAddr;
@@ -211,10 +218,10 @@ void client_Thread()
         printf("OK, conectado a server\n");
     
         // Enviar y Recibir paquetes
-        thread t1(sendPackagesToServer, sockFD);
-        thread t2(receivePackagesFromServer, sockFD);
-        t1.join();
-        t2.join();
+        thread t1(sendPackagesToServer, sockFD); /// generate thread to write of client by terminal
+        thread t2(receivePackagesFromServer, sockFD); /// generate thread to read of client by terminal
+        t1.join(); /// join thread from main thread of executor
+        t2.join(); /// join thread from main thread of executor
         
         // Cerrar conexion 
         shutdown(sockFD, SHUT_RDWR);
@@ -230,8 +237,7 @@ void client_Thread()
 //////////////////////////////MAIN////////////////////////////////
 // hostname -I
 // Esta basado en modelo request-response
-int main(int argc, const char** argv)
-{
+int main(int argc, const char** argv){
     while(true) // Al cerrar conexion puedo volver a abrir otra
     {
         isActiveConection = true;
@@ -246,16 +252,16 @@ int main(int argc, const char** argv)
 //////////////////////////////AUX/////////////////////////////
 // Agrega una capa de seguridad a cada funcion
 // No es necesario leerse todo esto, solo sirve para try-catch
-int ___socket(int domain, int type, int protocol)
-{
+
+//// create a socket
+int ___socket(int domain, int type, int protocol){
     int sockFD = socket(domain, type, protocol);
     if (-1 == sockFD)
       throw string("cannot create socket");
     return sockFD;
 }
 
-int ___inet_pton(int af, const char* src, void* dst)
-{
+int ___inet_pton(int af, const char* src, void* dst){
     int res = inet_pton(af, src, dst);
     if (0 > res)
       throw string("error: first parameter is not a valid address family");
@@ -264,6 +270,7 @@ int ___inet_pton(int af, const char* src, void* dst)
     return res;
 }
 
+//// generate a id of connection
 void ___connect(int sockFD, struct sockaddr* serv_addr, int addrlen)
 {
     int res = connect(sockFD, serv_addr, addrlen);
@@ -271,37 +278,37 @@ void ___connect(int sockFD, struct sockaddr* serv_addr, int addrlen)
       throw string("connect failed");
 }
 
-void ___bind(int sockFD, struct sockaddr* my_addr, int addrlen)
-{
+//// link id connection with port & IP
+void ___bind(int sockFD, struct sockaddr* my_addr, int addrlen){
     int res = bind(sockFD, my_addr, addrlen);
     if(res == -1)
       throw string("error bind failed");
 }
 
-void ___listen(int sockFD, int backlog)
-{
+//// enable listen connection
+void ___listen(int sockFD, int backlog){
     int res = listen(sockFD, backlog);
     if(res == -1)
       throw string("error listen failed");
 }
 
-int ___accept(int sockFD, struct sockaddr* addr, socklen_t* addrlen)
-{
+//// accept connection of client inside server
+int ___accept(int sockFD, struct sockaddr* addr, socklen_t* addrlen){
     int connectFD = accept(sockFD, addr, addrlen);
     if(connectFD < 0)
       throw string("error accept failed");
     return connectFD;
 }
 
-void ___read(int fd, char buf[], int len)
-{
+//// read msg of client
+void ___read(int fd, char buf[], int len){
     int n = read(fd, buf, len);
     if(n < 0) 
       throw string("ERROR reading from socket");
 }   
 
-void ___write(int fd, const char* msg, int len)
-{
+//// write msg to client
+void ___write(int fd, const char* msg, int len){
     int n = write(fd, msg, len);
     if(n < 0)
       throw string("ERROR writing to socket");

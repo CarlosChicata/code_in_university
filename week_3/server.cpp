@@ -121,19 +121,19 @@ public:
             {
                 sendMsgToDestinataryClient(c, msg); //// send msg to client
                 if(destinatarySendedOk(c)) /// check if destiny client receive correct the msg sent
-                    response = join({"5"});
+                    response = join({"5"}); // ok
                 else
-                    response = errorMsg("Error en cliente receptor");
+                    response = errorMsg("Error en cliente receptor"); // error
             }
-            if(response.empty())
-               response = errorMsg("Cliente no encontrado");
+            if(response.empty()) // check if client receive answer
+               response = errorMsg("Cliente no encontrado"); // error
             break;
         }
         
         case '8': // exit command
             for(int i=0; i<clients.size(); ++i) if(clients[i] == this)
-                clients.erase(clients.begin() + i);
-            this->isActive = false;
+                clients.erase(clients.begin() + i); /// remove from client store inside server.
+            this->isActive = false; /// close connection
             response = join({"5"}); // ok
             break;
         default: /// send wrong command to client
@@ -230,7 +230,7 @@ int server_Thread(int serverPort){
             printf("cliente conexion recibida\n");
             Client* c = new Client(connectFD); /// create a client conection manager object
             thread th(&Client::receivePackages, c); /// link this manager with thread
-            th.detach(); /// separate thread of main thread of executor
+            th.detach(); /// separate thread from main thread of executor
         }
         // Cierro el servidor
         close(sockFD);
