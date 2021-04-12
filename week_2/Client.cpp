@@ -20,7 +20,7 @@ How to run:
 #include "utils_socket.h"
 
 #define MAX_SIZE_BUFFER 256
-#define PORT 45002
+#define PORT 45000
 
 using namespace std;
 
@@ -35,19 +35,33 @@ void sendMsg(int id_conn){
     printf(">>");
     getline(cin, internalBuffer);
     writeSocket(id_conn, internalBuffer.c_str(), MAX_SIZE_BUFFER);
+    ///check if exit command
+    if(comparingString(internalBuffer, "exit")){
+      isActive = false;
+    }
     internalBuffer = string(MAX_SIZE_BUFFER, '\0');
   }
 
+  cout << "salirmos writting" << endl;
+  return;
 }
 
 void receiveMsg(int id_conn){
-  string internalBuffer;
-  
+  string internalBuffer = string(MAX_SIZE_BUFFER, '\0');
+
   while(isActive){
     readSocket(id_conn, (char*) internalBuffer.c_str(), MAX_SIZE_BUFFER);
-    printf("\b\b%s\n>>", internalBuffer.c_str());
-    fflush(stdout);
+    ///check if exit command
+    if(comparingString(internalBuffer, "exitcon")){
+      isActive = false;
+    }else{
+      printf("\b\b[message =>]%s\n>>", internalBuffer.c_str());
+      fflush(stdout);
+    }
+    internalBuffer = string(MAX_SIZE_BUFFER, '\0');
   }
+  cout << "salirmos receive" << endl;
+  return;
 }
 
 
@@ -99,11 +113,10 @@ int main(){
     ClientSender.detach();
     ClientListener.detach();
     
-    for(;;){
+    while(isActive){
     }
 
     shutdown(SocketFD, SHUT_RDWR);
- 
     close(SocketFD);
     return 0;
 }

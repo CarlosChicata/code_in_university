@@ -17,7 +17,7 @@ This a diagram of process to explain communication between all process.
 * Write a message in Client, this message send so Server will print this message.
 * Write a message in Server now; this message send to Client that it will print this message. 
 
-## Limitation of implementation
-* This is a online Server-Client communication and don't support communication of several client in server.
-* The port and IP of network is hardcoding in files.
-* Add mechanism to close the chat.
+## Limitation list
+Every mark in list is solved item.
+- [ ] The port and IP of network is hardcoding in files.
+- [ ] Add mechanism to close the chat.
