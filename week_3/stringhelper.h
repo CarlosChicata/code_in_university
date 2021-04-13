@@ -25,6 +25,13 @@ string join(initializer_list<string> vec){
     ans.pop_back();
     return ans;
 }
+//// Convert elements inside 'vec' to string
+string joinBySanti(initializer_list<string> vec){
+    string ans;
+    for(string s: vec)
+      ans = ans + s;
+    return ans;
+}
 
 //// join elements in 'vec' using 'sep'
 string split(vector<string> vec, string sep){
@@ -97,3 +104,39 @@ string errorMsg(string errormsg){
     return response;
 }
 
+/**
+ * Purpose:
+ *  get field in int type from msg using structure of santi protocols.
+ * Params
+ *  - pack: msg to process.
+ *  - idx: position to get size of field.
+ *  - bytes: number of bytes to contain the field in msg.
+ * Return a field.
+ * NOTE:
+ *  - extract number to get number in byte of field.
+ */
+int parserGetFieldByInt(string pack, int& idx, int bytes){
+    string sizestr(pack.begin()+idx, 
+                   pack.begin()+idx+bytes);
+    int size = stoi(sizestr);
+    idx += bytes; /// update position of index
+    return size;
+}
+
+/**
+ * Purpose:
+ *  get field in string type from msg using structure of santi protocols.
+ * Params
+ *  - pack: msg to process.
+ *  - idx: position to get size of field.
+ *  - bytes: number of bytes to contain the field in msg.
+ * Return a field.
+ * NOTE:
+ *  - extract field value from msg.
+ */
+string parserGetFieldByString(string pack, int& idx, int bytes){
+    string sizestr(pack.begin()+idx, 
+                   pack.begin()+idx+bytes);
+    idx += bytes; /// update position of index
+    return sizestr;
+}

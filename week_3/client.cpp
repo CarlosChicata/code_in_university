@@ -52,6 +52,7 @@ void inputServerData(char** hisPeerIP, int* hisPeerPort){
 //// process msg to format will analyze in server
 string parseCmd(string cmd){
     string pack;
+    /////cout << cmd << endl;
     vector<string> token = tokenizer(cmd);
     if(token.empty())
         pack = "error parsing";
@@ -66,6 +67,13 @@ string parseCmd(string cmd){
     }
     else if(token[0] == "exit") /// command exit
         pack = join({"8"});
+    else if (token[0] == "login"){ /// command login
+        string user, pass;
+        user = token[1];
+        pass = token[2];
+        pack = joinBySanti({"l", len(user, 2), len(pass, 2), user, pass});
+        /////cout << pack << endl;
+    }
     else
         pack = "error parsing"; /// wrong found command
     return pack;
@@ -112,6 +120,11 @@ string response2string(string pack)
             str = listmsg; 
             break;
         }
+        case 'E': {
+            int idxInternal = 1;
+            str = parserGetFieldByString(pack, idxInternal, 20); /// error santi protocol
+            break;
+        }
         default:
             str = errorMsg("Comando no reconocido del server"); 
     }
@@ -144,7 +157,17 @@ void sendPackagesToServer(int sockFD){
 
 /// check if pack is a command
 bool isRequest(string pack){
-    return pack[0] == '7'; // msg
+    return pack[0] == '7';// msg
+}
+
+/// check if pack is a command in santi protocol
+bool isValidRequestSanti(string pack){
+        return pack[0] == 'L';// msg
+} 
+
+//// check if msg is part of santi protocol
+bool isSantiProtocol(string pack){
+    return pack[0] == 'E' || pack[0] == 'L'; // msg
 }
 
 //// clean terminal to display a correct way the msg
@@ -167,6 +190,26 @@ void printIsRequestIsMessage(string pack){
     printfClean(string(buf)); /// clean terminal and display msg
 }
 
+//// print messge from server in client terminal by santy
+void printIsRequestIsMessageBySanti(string pack){
+    char buf[280]; //// create a temp buffer
+    bzero(buf, 280); //// clean temp buffer
+    int idx = 2;
+    
+    switch (pack[0]){
+        case 'L':
+            sprintf(buf, "%s: %s", "server", "ok! login valido"); /// generate msg, store in buffer
+            printfClean(string(buf)); /// clean terminal and display msg
+            break;
+        default:
+            break;
+    }
+    return ;
+}
+
+//////////////////////////////
+//////////////////////////////
+//////////////////////////////
 /**
  * Purpose:
  *  receive msg of responde from server by client.
@@ -186,6 +229,8 @@ void receivePackagesFromServer(int sockFD){
             printIsRequestIsMessage(pack); /// print msg in terminal
             pack = request2response(pack); //// generate response of msg
             ___write(sockFD, pack.c_str(), pack.size());  // envio al server su respuesta
+        }else if(isValidRequestSanti(pack)){
+            printIsRequestIsMessageBySanti(pack);
         }
         else{
             response = response2string(pack); /// generate message to responde of pack

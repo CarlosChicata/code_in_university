@@ -95,6 +95,7 @@ public:
     {
         string response; /// temp buffer
         int idx = 2;
+        /////cout << pack << endl;
         switch(pack[0]){
         case '1': // nick command
         {
@@ -129,7 +130,21 @@ public:
                response = errorMsg("Cliente no encontrado"); // error
             break;
         }
-        
+        case 'l': { /// new command: login command
+            int idxCommand = 1;
+            int sizeUser = parserGetFieldByInt(pack, idxCommand, 2);
+            int sizePass = parserGetFieldByInt(pack, idxCommand, 2);
+            string valueUser = parserGetFieldByString(pack, idxCommand, sizeUser);
+            string valuePass = parserGetFieldByString(pack, idxCommand, sizePass);
+
+            if(valuePass == "ucsp"){
+                this->nickname = valueUser;
+                response = joinBySanti({"L", "ok" }); /// ok
+            }else{
+                response = joinBySanti({"E", "Invalided pass!!!!!!" }); /// error
+            }
+            break;
+        }
         case '8': // exit command
             for(int i=0; i<clients.size(); ++i) if(clients[i] == this)
                 clients.erase(clients.begin() + i); /// remove from client store inside server.
@@ -140,8 +155,8 @@ public:
             response = errorMsg("Comando no identificado");
         }
 
-        if(this->nickname.empty() && pack[0] != '8') /// check if connection has a nickname
-            response = errorMsg("Necesitas un nickname!!"); 
+        ///if(this->nickname.empty() && pack[0] != '8') /// check if connection has a nickname
+        ///    response = errorMsg("Necesitas un nickname!!"); 
         return response;
     }
 
@@ -200,7 +215,7 @@ public:
      *  pack: msg from client.
      */ 
     bool isRequest(string pack){
-        return pack[0] == '1' || pack[0] == '2' || pack[0] == '3' || pack[0] == '8';
+        return pack[0] == 'l' || pack[0] == '1' || pack[0] == '2' || pack[0] == '3' || pack[0] == '8';
     }
 };
 
