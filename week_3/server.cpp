@@ -67,7 +67,6 @@ public:
         do{
             string pack(1000, '\0'); /// clean buffer
             ___read(connectFD, (char*)pack.c_str(), 1000); /// read message of client
-
             if(isRequest(pack)){ /// check if msg is command
                 pack = request2response(pack); /// process message of client
                 ___write(connectFD, pack.c_str(), pack.size()); /// alway responde of command
@@ -130,7 +129,29 @@ public:
                response = errorMsg("Cliente no encontrado"); // error
             break;
         }
-        case 'l': { /// new command: login command
+        case 'i': { /// new command: list by santi protocol
+            string tokenizeRptSize;
+            string tokenizeRptName = "";
+            bool isEmpty = false;
+
+            for(int i=0; i < clients.size(); ++i){
+                if(clients[i]->nickname == ""){
+                    isEmpty = true;
+                    break;
+                }
+                tokenizeRptSize += len(clients[i]->nickname, 2);
+                tokenizeRptName += clients[i]->nickname;
+            }
+            
+            if(isEmpty){
+                response = joinBySanti({"IE", " Wrong names in list" }); /// error
+            }else{
+                response = joinBySanti({"I", fillZero(to_string(clients.size()), 2), tokenizeRptSize + tokenizeRptName}); // ok
+            }
+
+            break;
+        }
+        case 'l': { /// new command: login command by santi protocol
             int idxCommand = 1;
             int sizeUser = parserGetFieldByInt(pack, idxCommand, 2);
             int sizePass = parserGetFieldByInt(pack, idxCommand, 2);
@@ -141,7 +162,7 @@ public:
                 this->nickname = valueUser;
                 response = joinBySanti({"L", "ok" }); /// ok
             }else{
-                response = joinBySanti({"E", "Invalided pass!!!!!!" }); /// error
+                response = joinBySanti({"E", " Invalided pass!!!!!" }); /// error
             }
             break;
         }
@@ -215,7 +236,7 @@ public:
      *  pack: msg from client.
      */ 
     bool isRequest(string pack){
-        return pack[0] == 'l' || pack[0] == '1' || pack[0] == '2' || pack[0] == '3' || pack[0] == '8';
+        return pack[0] == 'i' || pack[0] == 'l' || pack[0] == '1' || pack[0] == '2' || pack[0] == '3' || pack[0] == '8';
     }
 };
 

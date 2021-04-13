@@ -25,6 +25,7 @@ string join(initializer_list<string> vec){
     ans.pop_back();
     return ans;
 }
+
 //// Convert elements inside 'vec' to string
 string joinBySanti(initializer_list<string> vec){
     string ans;
@@ -50,6 +51,12 @@ string len(string s, int maxlen) // rellena zeros a la izquierda
     string zeros(maxlen - to_string(s.length()).length(), '0');
     return zeros + to_string(s.length());
 }
+
+string fillZero(string s, int maxlen){
+    string zeros(maxlen - s.length(), '0');
+    return zeros + s;
+}
+
 
 //// get msg from cmd --- be care sure!
 string parserGetMsg(string cmd){

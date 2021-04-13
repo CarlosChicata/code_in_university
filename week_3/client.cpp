@@ -74,6 +74,9 @@ string parseCmd(string cmd){
         pack = joinBySanti({"l", len(user, 2), len(pass, 2), user, pass});
         /////cout << pack << endl;
     }
+    else if(token[0] == "all"){ /// command list in santi protocol
+        pack = joinBySanti({"i"});
+    }
     else
         pack = "error parsing"; /// wrong found command
     return pack;
@@ -103,30 +106,23 @@ string response2string(string pack)
 {
     string str;
     int idx = 2;
-    switch(pack[0])
-    {
-        case '4': // Error
-        {
-            string errmsg = parserGetField(pack, idx, 3); /// get msg of error
-            str = errmsg; 
-            break;
-        }
-        case '5': // OK
-            str = "OK"; 
-            break;
-        case '6': // list
-        {
-            string listmsg = parserGetField(pack, idx, 3); /// get list of nickname of current connected clients in server
-            str = listmsg; 
-            break;
-        }
-        case 'E': {
-            int idxInternal = 1;
-            str = parserGetFieldByString(pack, idxInternal, 20); /// error santi protocol
-            break;
-        }
-        default:
-            str = errorMsg("Comando no reconocido del server"); 
+
+    if(pack[0] == '4'){
+        string errmsg = parserGetField(pack, idx, 3); /// get msg of error
+        str = errmsg; 
+    }else if(pack[0] == '5'){
+        str = "OK"; 
+    }else if(pack[0] == '6'){
+        string listmsg = parserGetField(pack, idx, 3); /// get list of nickname of current connected clients in server
+        str = listmsg; 
+    }else if(pack[0] == 'E'){
+        int idxInternal = 1;
+        str = parserGetFieldByString(pack, idxInternal, 20); /// error santi protocol
+    }else if(pack[0] == 'I' && pack[1] == 'E'){
+        int idxInternal = 2;
+        str = parserGetFieldByString(pack, idxInternal, 20); /// error santi protocol
+    }else {
+        str = errorMsg("Comando no reconocido del server");         
     }
     return str;
 }
@@ -162,7 +158,7 @@ bool isRequest(string pack){
 
 /// check if pack is a command in santi protocol
 bool isValidRequestSanti(string pack){
-        return pack[0] == 'L';// msg
+        return pack[0] == 'L' || (pack[0] == 'I' && pack[1] != 'E');// msg
 } 
 
 //// check if msg is part of santi protocol
@@ -195,12 +191,29 @@ void printIsRequestIsMessageBySanti(string pack){
     char buf[280]; //// create a temp buffer
     bzero(buf, 280); //// clean temp buffer
     int idx = 2;
-    
+    string msgClient = "";
+    vector<int> sizeName;
+
     switch (pack[0]){
         case 'L':
             sprintf(buf, "%s: %s", "server", "ok! login valido"); /// generate msg, store in buffer
             printfClean(string(buf)); /// clean terminal and display msg
             break;
+        case 'I': {
+            idx = 1;
+            int sizeN1 = parserGetFieldByInt(pack, idx, 2);
+            for(int it = 0; it < sizeN1; it++){
+                sizeName.push_back(parserGetFieldByInt(pack, idx, 2));
+            }
+            for(int it = 0; it < sizeName.size(); it++){
+                msgClient += parserGetFieldByString(pack, idx, sizeName[it]) + ", ";
+            }
+            msgClient.pop_back();
+            msgClient.pop_back();
+            sprintf(buf, "%s: %s", "server", msgClient.c_str());
+            printfClean(string(buf)); /// clean terminal and display msg
+            break;
+        }
         default:
             break;
     }
@@ -223,6 +236,9 @@ void receivePackagesFromServer(int sockFD){
         ___read(sockFD, (char*)pack.c_str(), pack.size());
         // printf("Debug: recibo [%s]\n", pack.c_str());
 
+        ///cout  << pack << endl;
+        ///cout  << isRequest(pack) << endl;
+        ///cout  << isValidRequestSanti(pack) << endl;
         string request, response; // Los packetes del server o son de tipo request, o response
         if(isRequest(pack)) /// check is pack is command
         {
