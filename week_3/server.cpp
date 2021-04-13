@@ -71,6 +71,7 @@ public:
             cout << "ok" << pack << endl;
             if(isRequest(pack)){ /// check if msg is command
                 pack = request2response(pack); /// process message of client
+                cout << "entrmaos a esta parte : " << pack << endl;
                 ___write(connectFD, pack.c_str(), pack.size()); /// alway responde of command
             }else if(isRequestBySanti(pack)){
                 pack = request2response(pack);
@@ -182,7 +183,6 @@ public:
             for(int i=0; i < clients.size(); ++i){
                 if(clients[i]->nickname == valueUser){
                     rpta = joinBySanti({"M", len(valueMsg, 3), len( this->nickname,2) , valueMsg, this->nickname});
-                    cout <<"  generated" << rpta << endl;
                     ___write(clients[i]->connectFD, rpta.c_str(), rpta.size());
                     pack = joinBySanti({"L", "ok" });;
                     isSend = false;
@@ -191,8 +191,27 @@ public:
             }
 
             if(isSend == true){
-                cout << "error !" << endl;
                 response = joinBySanti({"E", " unallow name server" }); /// error
+            }
+            break;
+        }
+        case 'b': {
+            int idxCommand = 1;
+            string rpta = "";
+            int sizeMsg = parserGetFieldByInt(pack, idxCommand, 3);
+            string valueMsg = parserGetFieldByString(pack, idxCommand, sizeMsg);
+            bool sentAny = false;
+            
+            for(int i = 0; i < clients.size() ; i++){
+                if(clients[i] != this){
+                    sentAny = true;
+                    rpta = joinBySanti({"B", len(valueMsg, 3), len(clients[i]->nickname, 2), valueMsg, clients[i]->nickname });
+                    ___write(clients[i]->connectFD, rpta.c_str(), rpta.size());
+                }
+            }
+
+            if(sentAny == false){
+                response = joinBySanti({"E", " unallow clients!!!!" }); /// error
             }
             break;
         }
@@ -271,7 +290,7 @@ public:
 
     /// same 'isRequest' method for santi protocols
     bool isRequestBySanti(string pack){
-        return pack[0] == 'm';
+        return pack[0] == 'm' || pack[0] == 'b';
     }
 };
 

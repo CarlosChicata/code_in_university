@@ -54,6 +54,7 @@ string parseCmd(string cmd){
     string pack;
     /////cout << cmd << endl;
     vector<string> token = tokenizer(cmd);
+
     if(token.empty())
         pack = "error parsing";
     else if(token[0] == "nickname") /// command nickname
@@ -73,6 +74,11 @@ string parseCmd(string cmd){
         pass = token[2];
         pack = joinBySanti({"l", len(user, 2), len(pass, 2), user, pass});
         /////cout << pack << endl;
+    }else if(token[0] == "loud"){
+        string msg;
+        cout << "entrmaos a esta parte : " << cmd << endl; 
+        msg = cmd.substr(5, cmd.size() - 5);
+        pack = joinBySanti({"b", len(msg, 3), msg});
     }
     else if(token[0] == "all"){ /// command list in santi protocol
         pack = joinBySanti({"i"});
@@ -167,8 +173,8 @@ bool isRequest(string pack){
 
 /// check if pack is a command in santi protocol
 bool isValidRequestSanti(string pack){
-        return  pack[0] == 'M' || pack[0] == 'L' || (pack[0] == 'I' && pack[1] != 'E');// msg
-} 
+    return  pack[0] == 'B' || pack[0] == 'M' || pack[0] == 'L' || (pack[0] == 'I' && pack[1] != 'E');// msg
+}
 
 //// check if msg is part of santi protocol
 bool isSantiProtocol(string pack){
@@ -203,7 +209,7 @@ void printIsRequestIsMessageBySanti(string pack){
     string msgClient = "";
     vector<int> sizeName;
 
-    cout << "sdasd" << pack << endl;
+    cout << "sdasd: " << pack << endl;
     switch (pack[0]){
         case 'L':
             sprintf(buf, "%s: %s", "server", "ok! login valido"); /// generate msg, store in buffer
@@ -225,6 +231,17 @@ void printIsRequestIsMessageBySanti(string pack){
             break;
         }
         case 'M': {
+            idx = 1;
+            int sizeMsg = parserGetFieldByInt(pack, idx, 3);
+            int sizeUser = parserGetFieldByInt(pack, idx, 2);
+            string valueMsg = parserGetFieldByString(pack, idx, sizeMsg);
+            string valueUser = parserGetFieldByString(pack, idx, sizeUser);
+
+            sprintf(buf, "%s: %s", valueUser.c_str(), valueMsg.c_str());
+            printfClean(string(buf)); /// clean terminal and display msg
+            break;
+        }
+        case 'B': {
             idx = 1;
             int sizeMsg = parserGetFieldByInt(pack, idx, 3);
             int sizeUser = parserGetFieldByInt(pack, idx, 2);
