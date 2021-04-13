@@ -76,7 +76,6 @@ string parseCmd(string cmd){
         /////cout << pack << endl;
     }else if(token[0] == "loud"){
         string msg;
-        cout << "entrmaos a esta parte : " << cmd << endl; 
         msg = cmd.substr(5, cmd.size() - 5);
         pack = joinBySanti({"b", len(msg, 3), msg});
     }
@@ -134,7 +133,6 @@ string response2string(string pack)
         int idxInternal = 2;
         str = parserGetFieldByString(pack, idxInternal, 20); /// error santi protocol
     }else {
-        cout << "entramso en error!"<< pack << endl;
         sleep(100000);
         str = errorMsg("Comando no reconocido del server");         
     }
@@ -152,7 +150,7 @@ void sendPackagesToServer(int sockFD){
         printf(">>");
         getline(cin, cmd);
         pack = parseCmd(cmd); /// process msg
-        cout << pack << endl;
+
 	    if(pack == "8") // quit
             isActiveConection = false; /// close connection of client
         if(pack == "error parsing") /// if pack is error
@@ -209,7 +207,6 @@ void printIsRequestIsMessageBySanti(string pack){
     string msgClient = "";
     vector<int> sizeName;
 
-    cout << "sdasd: " << pack << endl;
     switch (pack[0]){
         case 'L':
             sprintf(buf, "%s: %s", "server", "ok! login valido"); /// generate msg, store in buffer

@@ -68,10 +68,8 @@ public:
             string pack(1000, '\0'); /// clean buffer
             ___read(connectFD, (char*)pack.c_str(), 1000); /// read message of client
             
-            cout << "ok" << pack << endl;
             if(isRequest(pack)){ /// check if msg is command
                 pack = request2response(pack); /// process message of client
-                cout << "entrmaos a esta parte : " << pack << endl;
                 ___write(connectFD, pack.c_str(), pack.size()); /// alway responde of command
             }else if(isRequestBySanti(pack)){
                 pack = request2response(pack);
