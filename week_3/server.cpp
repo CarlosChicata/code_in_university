@@ -68,13 +68,16 @@ public:
             string pack(1000, '\0'); /// clean buffer
             ___read(connectFD, (char*)pack.c_str(), 1000); /// read message of client
             
+            ////cout << "sebser" << pack << endl;
             if(isRequest(pack)){ /// check if msg is command
                 pack = request2response(pack); /// process message of client
                 ___write(connectFD, pack.c_str(), pack.size()); /// alway responde of command
+
             }else if(isRequestBySanti(pack)){
                 pack = request2response(pack);
             }
             else{
+                ////cout << "c" << endl;
                 lastResponse = response2string(pack); /// generate response of string (this is useless part of server)
             }
         }while(this->isActive);
@@ -98,6 +101,7 @@ public:
         string response; /// temp buffer
         int idx = 2;
         /////cout << pack << endl;
+        ////cout << "pradckat: "<< pack[0] << endl;
         switch(pack[0]){
         case '1': // nick command
         {
@@ -213,6 +217,17 @@ public:
             }
             break;
         }
+        case 'x': {
+            int idxCommand = 1;
+            string rpta = parserGetFieldByString(pack, idxCommand, 255);
+            ////cout << rpta << endl;
+            rpta = joinBySanti({"X", rpta});
+            ////cout << "eptra" << rpta << endl;
+            for(int i = 0; i < clients.size() ; i++){
+                ////cout << "enviamos!" << endl;
+                ___write(clients[i]->connectFD, rpta.c_str(), rpta.size());
+            }
+        }
         case '8': // exit command
             for(int i=0; i<clients.size(); ++i) if(clients[i] == this)
                 clients.erase(clients.begin() + i); /// remove from client store inside server.
@@ -288,7 +303,7 @@ public:
 
     /// same 'isRequest' method for santi protocols
     bool isRequestBySanti(string pack){
-        return pack[0] == 'm' || pack[0] == 'b';
+        return pack[0] == 'x' || pack[0] == 'm' || pack[0] == 'b';
     }
 };
 

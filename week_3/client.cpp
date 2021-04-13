@@ -79,6 +79,12 @@ string parseCmd(string cmd){
         msg = cmd.substr(5, cmd.size() - 5);
         pack = joinBySanti({"b", len(msg, 3), msg});
     }
+    else if(token[0] == "ascii"){
+        vector<char> vec;
+        for(int i = 0; i < 256;i++) vec.push_back(i);
+        string bufferAscci(vec.begin(), vec.end());
+        pack = joinBySanti({ "x", bufferAscci});
+    }
     else if(token[0] == "all"){ /// command list in santi protocol
         pack = joinBySanti({"i"});
     }
@@ -92,7 +98,6 @@ string parseCmd(string cmd){
         pack = "error parsing"; /// wrong found command
     return pack;
 }
-
 ////////////////////////////////PACKS & REQUEST/RESPONSE/////////////////////////////////
 
 /// generate responde from msg of server
@@ -171,7 +176,7 @@ bool isRequest(string pack){
 
 /// check if pack is a command in santi protocol
 bool isValidRequestSanti(string pack){
-    return  pack[0] == 'B' || pack[0] == 'M' || pack[0] == 'L' || (pack[0] == 'I' && pack[1] != 'E');// msg
+    return  pack[0] == 'X' || pack[0] == 'B' || pack[0] == 'M' || pack[0] == 'L' || (pack[0] == 'I' && pack[1] != 'E');// msg
 }
 
 //// check if msg is part of santi protocol
@@ -207,11 +212,36 @@ void printIsRequestIsMessageBySanti(string pack){
     string msgClient = "";
     vector<int> sizeName;
 
+    ////cout << "etnramos" << pack[0] << endl;
+
     switch (pack[0]){
         case 'L':
             sprintf(buf, "%s: %s", "server", "ok! login valido"); /// generate msg, store in buffer
             printfClean(string(buf)); /// clean terminal and display msg
             break;
+        case 'X': {
+            idx = 1;
+            string valueMsg = parserGetFieldByString(pack, idx, 255);
+            bool flag = false;
+            vector<char> vec;
+            for(int i = 0; i < 256;i++) vec.push_back(i);
+            string bufferAscci(vec.begin(), vec.end());
+
+            if(bufferAscci == valueMsg){
+                flag=true;
+            }else{
+                flag=false;
+            }
+
+            if(flag){
+                valueMsg = "no validado";
+            }else{
+                valueMsg = "validado";
+            }
+            sprintf(buf, "%s: %s", "server", valueMsg.c_str()); /// generate msg, store in buffer
+            printfClean(string(buf)); /// clean terminal and display msg
+            break;
+        }
         case 'I': {
             idx = 1;
             int sizeN1 = parserGetFieldByInt(pack, idx, 2);
@@ -271,9 +301,9 @@ void receivePackagesFromServer(int sockFD){
         ___read(sockFD, (char*)pack.c_str(), pack.size());
         // printf("Debug: recibo [%s]\n", pack.c_str());
 
-        ///cout  << pack << endl;
-        ///cout  << isRequest(pack) << endl;
-        ///cout  << isValidRequestSanti(pack) << endl;
+        ////cout  << pack << endl;
+        ////cout  << isRequest(pack) << endl;
+        ////cout  << isValidRequestSanti(pack) << endl;
         string request, response; // Los packetes del server o son de tipo request, o response
         if(isRequest(pack)) /// check is pack is command
         {
