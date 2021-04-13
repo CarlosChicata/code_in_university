@@ -67,9 +67,13 @@ public:
         do{
             string pack(1000, '\0'); /// clean buffer
             ___read(connectFD, (char*)pack.c_str(), 1000); /// read message of client
+            
+            cout << "ok" << pack << endl;
             if(isRequest(pack)){ /// check if msg is command
                 pack = request2response(pack); /// process message of client
                 ___write(connectFD, pack.c_str(), pack.size()); /// alway responde of command
+            }else if(isRequestBySanti(pack)){
+                pack = request2response(pack);
             }
             else{
                 lastResponse = response2string(pack); /// generate response of string (this is useless part of server)
@@ -166,6 +170,32 @@ public:
             }
             break;
         }
+        case 'm': {
+            int idxCommand = 1;
+            int sizeMsg = parserGetFieldByInt(pack, idxCommand, 3);
+            int sizeUser = parserGetFieldByInt(pack, idxCommand, 2);
+            string valueMsg = parserGetFieldByString(pack, idxCommand, sizeMsg);
+            string valueUser = parserGetFieldByString(pack, idxCommand, sizeUser);
+            string rpta = "";
+            bool isSend = true;
+
+            for(int i=0; i < clients.size(); ++i){
+                if(clients[i]->nickname == valueUser){
+                    rpta = joinBySanti({"M", len(valueMsg, 3), len( this->nickname,2) , valueMsg, this->nickname});
+                    cout <<"  generated" << rpta << endl;
+                    ___write(clients[i]->connectFD, rpta.c_str(), rpta.size());
+                    pack = joinBySanti({"L", "ok" });;
+                    isSend = false;
+                    break;
+                }
+            }
+
+            if(isSend == true){
+                cout << "error !" << endl;
+                response = joinBySanti({"E", " unallow name server" }); /// error
+            }
+            break;
+        }
         case '8': // exit command
             for(int i=0; i<clients.size(); ++i) if(clients[i] == this)
                 clients.erase(clients.begin() + i); /// remove from client store inside server.
@@ -236,7 +266,12 @@ public:
      *  pack: msg from client.
      */ 
     bool isRequest(string pack){
-        return pack[0] == 'i' || pack[0] == 'l' || pack[0] == '1' || pack[0] == '2' || pack[0] == '3' || pack[0] == '8';
+        return pack[0] == 'm' || pack[0] == 'i' || pack[0] == 'l' || pack[0] == '1' || pack[0] == '2' || pack[0] == '3' || pack[0] == '8';
+    }
+
+    /// same 'isRequest' method for santi protocols
+    bool isRequestBySanti(string pack){
+        return pack[0] == 'm';
     }
 };
 

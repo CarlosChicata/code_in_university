@@ -77,6 +77,12 @@ string parseCmd(string cmd){
     else if(token[0] == "all"){ /// command list in santi protocol
         pack = joinBySanti({"i"});
     }
+    else if(token[0] == "talk"){
+        string usr, msg_;
+        usr = token[1];
+        msg_ = cmd.substr(usr.size() + 6, cmd.size() - usr.size() - 6);
+        pack = joinBySanti({"m", len(msg_, 3), len(usr, 2), msg_, usr});
+    }
     else
         pack = "error parsing"; /// wrong found command
     return pack;
@@ -122,6 +128,8 @@ string response2string(string pack)
         int idxInternal = 2;
         str = parserGetFieldByString(pack, idxInternal, 20); /// error santi protocol
     }else {
+        cout << "entramso en error!"<< pack << endl;
+        sleep(100000);
         str = errorMsg("Comando no reconocido del server");         
     }
     return str;
@@ -138,6 +146,7 @@ void sendPackagesToServer(int sockFD){
         printf(">>");
         getline(cin, cmd);
         pack = parseCmd(cmd); /// process msg
+        cout << pack << endl;
 	    if(pack == "8") // quit
             isActiveConection = false; /// close connection of client
         if(pack == "error parsing") /// if pack is error
@@ -158,7 +167,7 @@ bool isRequest(string pack){
 
 /// check if pack is a command in santi protocol
 bool isValidRequestSanti(string pack){
-        return pack[0] == 'L' || (pack[0] == 'I' && pack[1] != 'E');// msg
+        return  pack[0] == 'M' || pack[0] == 'L' || (pack[0] == 'I' && pack[1] != 'E');// msg
 } 
 
 //// check if msg is part of santi protocol
@@ -194,6 +203,7 @@ void printIsRequestIsMessageBySanti(string pack){
     string msgClient = "";
     vector<int> sizeName;
 
+    cout << "sdasd" << pack << endl;
     switch (pack[0]){
         case 'L':
             sprintf(buf, "%s: %s", "server", "ok! login valido"); /// generate msg, store in buffer
@@ -211,6 +221,17 @@ void printIsRequestIsMessageBySanti(string pack){
             msgClient.pop_back();
             msgClient.pop_back();
             sprintf(buf, "%s: %s", "server", msgClient.c_str());
+            printfClean(string(buf)); /// clean terminal and display msg
+            break;
+        }
+        case 'M': {
+            idx = 1;
+            int sizeMsg = parserGetFieldByInt(pack, idx, 3);
+            int sizeUser = parserGetFieldByInt(pack, idx, 2);
+            string valueMsg = parserGetFieldByString(pack, idx, sizeMsg);
+            string valueUser = parserGetFieldByString(pack, idx, sizeUser);
+
+            sprintf(buf, "%s: %s", valueUser.c_str(), valueMsg.c_str());
             printfClean(string(buf)); /// clean terminal and display msg
             break;
         }
